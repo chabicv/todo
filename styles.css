@@ -142,8 +142,6 @@ body {
     cursor: pointer;
 }
 
-#taskDescription, #editTaskDescription, #editTaskCounter {
+#taskDescription {
     width: 100%; /* Asegurar que el campo de entrada ocupe el ancho completo */
 }
-
-
