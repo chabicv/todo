@@ -6,6 +6,7 @@
     <title>Lista de Tareas</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -14,6 +15,8 @@
             <button class="save-task-btn" onclick="saveTasksToFile()" title="Guardar Tareas"><i class="fas fa-save"></i></button>
             <input type="file" id="fileInput" class="load-task-btn" style="display:none" onchange="loadTasksFromFile(event)">
             <button class="load-task-btn" onclick="document.getElementById('fileInput').click()" title="Cargar Tareas"><i class="fas fa-upload"></i></button>
+            <button class="pdf-btn" onclick="generatePDF()">PDF</button>
+            <button class="reorder-btn" onclick="reorderTasks()" title="Reordenar Tareas"><i class="fas fa-sync-alt"></i></button>
         </div>
         <ul id="taskList"></ul>
     </div>
@@ -32,13 +35,24 @@
         </div>
     </div>
 
-    <!-- Modal para revivir una tarea -->
-    <div id="reviveModal" class="modal">
+    <!-- Modal para editar una tarea -->
+    <div id="editTaskModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Revivir Tarea</h2>
-            <input type="text" id="reviveTaskDescription" placeholder="Nueva Descripción de la Tarea">
-            <button onclick="confirmReviveTask()">Confirmar</button>
+            <span class="close" onclick="closeEditTaskModal()">&times;</span>
+            <h2>Editar Tarea</h2>
+            <input type="text" id="editTaskDescription" placeholder="Descripción de la Tarea">
+            <input type="text" id="editTaskCounter" placeholder="Índice de la Tarea">
+            <button onclick="confirmEditTask()">Confirmar</button>
+        </div>
+    </div>
+
+    <!-- Modal para añadir una subtarea -->
+    <div id="addSubtaskModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddSubtaskModal()">&times;</span>
+            <h2>Añadir Subtarea</h2>
+            <input type="text" id="subtaskDescription" placeholder="Descripción de la Subtarea">
+            <button onclick="addSubtask()">Añadir Subtarea</button>
         </div>
     </div>
 

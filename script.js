@@ -1,5 +1,8 @@
 let tasks = [];
 let taskToRevive = null;
+let taskToEdit = null;
+let subtaskToEdit = null;
+let taskToAddSubtask = null;
 
 function updateTaskDependencyOptions() {
     const taskDependency = document.getElementById('taskDependency');
@@ -22,6 +25,41 @@ function showAddTaskModal() {
 
 function closeAddTaskModal() {
     const modal = document.getElementById('addTaskModal');
+    modal.style.display = "none";
+}
+
+function showEditTaskModal(taskIndex, subtaskIndex) {
+    taskToEdit = taskIndex;
+    subtaskToEdit = subtaskIndex;
+
+    const task = subtaskIndex === null ? tasks[taskIndex] : tasks[taskIndex].subtasks[subtaskIndex];
+
+    document.getElementById('editTaskDescription').value = task.description;
+
+    if (subtaskIndex === null) {
+        document.getElementById('editTaskCounter').value = task.counter;
+        document.getElementById('editTaskCounter').style.display = 'block';
+    } else {
+        document.getElementById('editTaskCounter').style.display = 'none';
+    }
+
+    const modal = document.getElementById('editTaskModal');
+    modal.style.display = "block";
+}
+
+function closeEditTaskModal() {
+    const modal = document.getElementById('editTaskModal');
+    modal.style.display = "none";
+}
+
+function showAddSubtaskModal(taskIndex) {
+    taskToAddSubtask = taskIndex;
+    const modal = document.getElementById('addSubtaskModal');
+    modal.style.display = "block";
+}
+
+function closeAddSubtaskModal() {
+    const modal = document.getElementById('addSubtaskModal');
     modal.style.display = "none";
 }
 
@@ -53,7 +91,6 @@ function addTask() {
             tasks.push(task);
         }
 
-        penalizeTopTasks();
         renderTasks();
         saveTasks();
         updateTaskDependencyOptions();
@@ -61,15 +98,22 @@ function addTask() {
     }
 }
 
-function penalizeTopTasks() {
-    if (tasks.length > 0) {
-        tasks[0].counter += 0.3;
-    }
-    if (tasks.length > 1) {
-        tasks[1].counter += 0.2;
-    }
-    if (tasks.length > 2) {
-        tasks[2].counter += 0.1;
+function addSubtask() {
+    const description = document.getElementById('subtaskDescription').value;
+
+    if (description && taskToAddSubtask !== null) {
+        const subtask = {
+            description,
+            dependent: false,
+            revived: false,
+            dormant: false
+        };
+
+        tasks[taskToAddSubtask].subtasks.push(subtask);
+
+        renderTasks();
+        saveTasks();
+        closeAddSubtaskModal();
     }
 }
 
@@ -77,21 +121,19 @@ function renderTasks() {
     const taskList = document.getElementById('taskList');
     taskList.innerHTML = '';
 
-    // Encontrar el índice máximo
     const maxCounter = Math.max(...tasks.map(task => task.counter));
 
     tasks.forEach((task, index) => {
         const taskItem = document.createElement('li');
         taskItem.className = 'task-item';
+        taskItem.setAttribute('data-id', index);
 
-        // Resaltar tareas con el índice más alto
         if (task.counter === maxCounter && task.counter >= 1) {
             taskItem.classList.add('max-index');
         } else if (task.counter >= 1) {
             taskItem.classList.add('highlight');
         }
 
-        // Aplicar el estado durmiente
         if (task.dormant) {
             taskItem.classList.add('dormant');
         }
@@ -104,10 +146,10 @@ function renderTasks() {
             }
         }
         taskItem.innerHTML = `
-            <span ondblclick="editTask(${index}, null)">${task.description} [${task.counter.toFixed(1)}]${dependencyText}</span>
+            <span ondblclick="showEditTaskModal(${index}, null)">${task.description} [${task.counter.toFixed(1)}]${dependencyText}</span>
             <div class="task-actions">
                 <button onclick="completeTask(${index})" ${task.subtasks.length > 0 ? 'disabled' : ''}>Completar</button>
-                <button onclick="showReviveModal(${index})" ${index === tasks.length - 1 ? 'disabled' : ''}>Revivir</button>
+                <button onclick="showAddSubtaskModal(${index})">Subtarea</button>
             </div>
         `;
         taskItem.onclick = () => toggleDormantTask(index);
@@ -117,14 +159,14 @@ function renderTasks() {
         task.subtasks.forEach((subtask, subIndex) => {
             const subtaskItem = document.createElement('li');
             subtaskItem.className = 'task-item subtask';
+            subtaskItem.setAttribute('data-id', `${index}-${subIndex}`);
 
-            // Aplicar el estado durmiente a subtareas
             if (subtask.dormant) {
                 subtaskItem.classList.add('dormant');
             }
 
             subtaskItem.innerHTML = `
-                <span ondblclick="editTask(${index}, ${subIndex})">${subtask.description}</span>
+                <span ondblclick="showEditTaskModal(${index}, ${subIndex})">${subtask.description}</span>
                 <div class="task-actions">
                     <button onclick="completeSubtask(${index}, ${subIndex})">Completar Subtarea</button>
                 </div>
@@ -133,6 +175,42 @@ function renderTasks() {
             taskList.appendChild(subtaskItem);
         });
     });
+}
+
+function reorderTasks() {
+    tasks.sort((a, b) => b.counter - a.counter);
+    renderTasks();
+    saveTasks();
+}
+
+function confirmEditTask() {
+    const newDescription = document.getElementById('editTaskDescription').value;
+    let newCounter = document.getElementById('editTaskCounter').value;
+
+    newCounter = newCounter.replace(',', '.');
+
+    if (isNaN(newCounter)) {
+        alert('El índice debe ser un número válido.');
+        return;
+    }
+
+    newCounter = parseFloat(newCounter);
+
+    if (taskToEdit !== null) {
+        let task;
+        if (subtaskToEdit === null) {
+            task = tasks[taskToEdit];
+            task.counter = newCounter;
+        } else {
+            task = tasks[taskToEdit].subtasks[subtaskToEdit];
+        }
+
+        task.description = newDescription;
+
+        renderTasks();
+        saveTasks();
+        closeEditTaskModal();
+    }
 }
 
 function toggleDormantTask(taskIndex) {
@@ -162,40 +240,6 @@ function completeSubtask(taskIndex, subtaskIndex) {
     }
     renderTasks();
     saveTasks();
-}
-
-function showReviveModal(taskIndex) {
-    taskToRevive = taskIndex;
-    const modal = document.getElementById('reviveModal');
-    modal.style.display = "block";
-}
-
-function confirmReviveTask() {
-    const newDescription = document.getElementById('reviveTaskDescription').value;
-    if (taskToRevive !== null && newDescription) {
-        const task = tasks[taskToRevive];
-        const newSubtask = {
-            description: newDescription,
-            dependent: task.dependent,
-            revived: true
-        };
-        task.subtasks.push(newSubtask);
-        task.revived = true;
-        task.counter += 1; // Incrementar el contador de revivificaciones
-
-        // Mover la tarea original al final de la pila
-        tasks.splice(taskToRevive, 1);
-        tasks.push(task);
-        renderTasks();
-        saveTasks();
-        closeModal();
-    }
-}
-
-function closeModal() {
-    const modal = document.getElementById('reviveModal');
-    modal.style.display = "none";
-    document.getElementById('reviveTaskDescription').value = '';
 }
 
 function saveTasks() {
@@ -237,31 +281,43 @@ function loadTasksFromFile(event) {
     reader.readAsText(file);
 }
 
+function generatePDF() {
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF();
+    const taskList = document.getElementById('taskList');
+    let yOffset = 10;
+
+    tasks.forEach((task, index) => {
+        const text = `${task.description} [${task.counter.toFixed(1)}]`;
+        doc.text(text, 10, yOffset);
+        yOffset += 10;
+
+        task.subtasks.forEach((subtask) => {
+            const subText = `  - ${subtask.description}`;
+            doc.text(subText, 10, yOffset);
+            yOffset += 10;
+        });
+
+        yOffset += 5; // Extra space between tasks
+    });
+
+    doc.save('tasks.pdf');
+}
+
 window.onload = loadTasks;
 
 window.onclick = function(event) {
     const addTaskModal = document.getElementById('addTaskModal');
-    const reviveModal = document.getElementById('reviveModal');
+    const addSubtaskModal = document.getElementById('addSubtaskModal');
+    const editTaskModal = document.getElementById('editTaskModal');
     if (event.target == addTaskModal) {
         closeAddTaskModal();
     }
-    if (event.target == reviveModal) {
-        closeModal();
+    if (event.target == addSubtaskModal) {
+        closeAddSubtaskModal();
     }
-}
-
-function editTask(taskIndex, subtaskIndex) {
-    let task;
-    if (subtaskIndex !== null) {
-        task = tasks[taskIndex].subtasks[subtaskIndex];
-    } else {
-        task = tasks[taskIndex];
-    }
-
-    const newDescription = prompt("Editar Descripción de la Tarea:", task.description);
-    if (newDescription !== null) {
-        task.description = newDescription;
-        renderTasks();
-        saveTasks();
+    if (event.target == editTaskModal) {
+        closeEditTaskModal();
     }
 }
