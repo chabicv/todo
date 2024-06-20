@@ -11,11 +11,11 @@
 <body>
     <div class="container">
         <div class="button-group">
-            <button class="add-task-btn" onclick="showAddTaskModal()">Añadir Tarea</button>
+            <button class="add-task-btn highlighted" onclick="showAddTaskModal()"><i class="fas fa-plus"></i></button>
             <button class="save-task-btn" onclick="saveTasksToFile()" title="Guardar Tareas"><i class="fas fa-save"></i></button>
             <input type="file" id="fileInput" class="load-task-btn" style="display:none" onchange="loadTasksFromFile(event)">
             <button class="load-task-btn" onclick="document.getElementById('fileInput').click()" title="Cargar Tareas"><i class="fas fa-upload"></i></button>
-            <button class="pdf-btn" onclick="generatePDF()">PDF</button>
+            <button class="pdf-btn" onclick="generatePDF()" title="Exportar PDF"><i class="fas fa-file-pdf"></i></button>
             <button class="reorder-btn" onclick="reorderTasks()" title="Reordenar Tareas"><i class="fas fa-sync-alt"></i></button>
         </div>
         <ul id="taskList"></ul>
@@ -31,7 +31,7 @@
                 <option value="none">No depende</option>
                 <option value="other">Depende de otros</option>
             </select>
-            <button onclick="addTask()">Añadir Tarea</button>
+            <button onclick="addTask()"><i class="fas fa-plus"></i></button>
         </div>
     </div>
 
@@ -52,7 +52,7 @@
             <span class="close" onclick="closeAddSubtaskModal()">&times;</span>
             <h2>Añadir Subtarea</h2>
             <input type="text" id="subtaskDescription" placeholder="Descripción de la Subtarea">
-            <button onclick="addSubtask()">Añadir Subtarea</button>
+            <button onclick="addSubtask()"><i class="fas fa-plus"></i></button>
         </div>
     </div>
 

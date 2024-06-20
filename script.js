@@ -1,5 +1,4 @@
 let tasks = [];
-let taskToRevive = null;
 let taskToEdit = null;
 let subtaskToEdit = null;
 let taskToAddSubtask = null;
@@ -79,7 +78,6 @@ function addTask() {
             description,
             dependent,
             dependencyIndex,
-            revived: false,
             subtasks: [],
             counter: 0,
             dormant: false
@@ -105,7 +103,6 @@ function addSubtask() {
         const subtask = {
             description,
             dependent: false,
-            revived: false,
             dormant: false
         };
 
@@ -148,8 +145,8 @@ function renderTasks() {
         taskItem.innerHTML = `
             <span ondblclick="showEditTaskModal(${index}, null)">${task.description} [${task.counter.toFixed(1)}]${dependencyText}</span>
             <div class="task-actions">
-                <button onclick="completeTask(${index})" ${task.subtasks.length > 0 ? 'disabled' : ''}>Completar</button>
-                <button onclick="showAddSubtaskModal(${index})">Subtarea</button>
+                ${task.subtasks.length > 0 ? '' : `<button onclick="completeTask(${index})" title="Completar"><i class="fas fa-check"></i></button>`}
+                <button onclick="showAddSubtaskModal(${index})" title="Subtarea"><i class="fas fa-plus"></i></button>
             </div>
         `;
         taskItem.onclick = () => toggleDormantTask(index);
@@ -168,7 +165,7 @@ function renderTasks() {
             subtaskItem.innerHTML = `
                 <span ondblclick="showEditTaskModal(${index}, ${subIndex})">${subtask.description}</span>
                 <div class="task-actions">
-                    <button onclick="completeSubtask(${index}, ${subIndex})">Completar Subtarea</button>
+                    <button onclick="completeSubtask(${index}, ${subIndex})" title="Completar Subtarea"><i class="fas fa-check"></i></button>
                 </div>
             `;
             subtaskItem.onclick = () => toggleDormantSubtask(index, subIndex);
@@ -236,7 +233,6 @@ function completeSubtask(taskIndex, subtaskIndex) {
     const task = tasks[taskIndex];
     if (task) {
         task.subtasks.splice(subtaskIndex, 1);
-        task.revived = false;
     }
     renderTasks();
     saveTasks();
