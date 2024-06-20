@@ -145,7 +145,7 @@ function renderTasks() {
         taskItem.innerHTML = `
             <span ondblclick="showEditTaskModal(${index}, null)">${task.description} [${task.counter.toFixed(1)}]${dependencyText}</span>
             <div class="task-actions">
-                ${task.subtasks.length > 0 ? '' : `<button onclick="completeTask(${index})" title="Completar"><i class="fas fa-check"></i></button>`}
+                <button class="${task.subtasks.length > 0 ? 'disabled' : ''}" onclick="${task.subtasks.length > 0 ? '' : `completeTask(${index})`}" title="Completar"><i class="fas fa-check"></i></button>
                 <button onclick="showAddSubtaskModal(${index})" title="Subtarea"><i class="fas fa-plus"></i></button>
             </div>
         `;
